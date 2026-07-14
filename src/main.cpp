@@ -1,34 +1,33 @@
 #include "raylib.h"
-
-int main() {
-    int ballX = 400;
-    int ballY = 400;
-    int radius = 20;
-    int windowX=1350, windowY=800;
-
-    // velocity (speed in pixels per frame)
-    int dx = 5;
-    int dy = 5;
-
-    //Color green = {20, 160, 133, 255};
-    InitWindow(windowX, windowY, "Bouncing Ball");
+int main(){
+    int window=800;
+    InitWindow(window, window, "My Game");
     SetTargetFPS(60);
+    // xtics du chatactere
+    int charWidth=40, charHeight =60;
+    int charX=window/2-charWidth/2;
+    int charY=window -charHeight-20; // 20 pads au dessus du bas
+    int charSpeed=6;
+    Color green = {20, 160, 133, 255}; // coleur du arriere-plan
     while (!WindowShouldClose()) {
-        // Update position
-        ballX+=dx;
-        ballY+=dy;
-        // Bounce on edges
-        if(ballX<radius ||ballX > windowX-radius) {
-            dx=-dx;   // reverse horizontal direction
-        }
-        if(ballY<radius ||ballY > windowY-radius) {
-            dy=-dy;   // reverse vertical direction
-        }
+        // 1. gestion des evenement
+        if (IsKeyDown(KEY_RIGHT)) charX+=charSpeed;
+        else if (IsKeyDown(KEY_LEFT)) charX-=charSpeed;
 
-        // Drawing
+        // garde charactere dans logiciel
+        if (charX<0) charX = 0;
+        if (charX>window-charWidth) charX=window-charWidth;
+
+        // 2. Dessin
         BeginDrawing();
-        ClearBackground(GREEN);
-        DrawCircle(ballX, ballY, radius, WHITE);
+        ClearBackground(green);
+
+        // Ligne du sol
+        DrawLine(0, window-20, window, window-20, DARKGRAY);
+
+        // rectangle duCharactere
+        DrawRectangle(charX, charY, charWidth, charHeight, WHITE);
+
         EndDrawing();
     }
 
