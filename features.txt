@@ -1,0 +1,41 @@
+001 – Build the Field
+
+    Draw a rectangular play area. (front view)
+
+    Add boundaries (ground, left/right walls, top limit/ i dont think).
+
+002 – Develop Players
+
+    Create player characters (simple circles or rectangles).
+
+    Add movement controls (left, right, jump).
+
+003 – Add the Ball
+
+    Implement ball physics (gravity, bouncing).
+
+    Detect collisions with players and field.
+
+004 – Create Goals and goal posts
+
+    Place goalposts on each side.
+
+    Detect when ball enters a goal → award point.
+
+005 – Scoring System
+
+    Keep track of scores for each player.
+
+    Display score on screen.
+
+006 – Match Timer
+
+    Add countdown timer (e.g., 60 seconds).
+
+    End game when timer runs out.
+
+007 - Add modes and Create Reasonable players
+
+    think in the future and add modes to make it more enticing
+
+    Add realistic players, remove the rectangles or so
