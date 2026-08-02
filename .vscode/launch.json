@@ -8,7 +8,7 @@
             "program": "${workspaceFolder}/HABAH_BABAH.exe",
             "cwd": "${workspaceFolder}",
             "MIMode": "gdb",
-            "miDebuggerPath": "C:/msys64/mingw64/bin/gdb.exe",
+            "miDebuggerPath": "C:/raylib/w64devkit/bin/gdb.exe",
             "preLaunchTask": "Build",
             "externalConsole": true
         }
