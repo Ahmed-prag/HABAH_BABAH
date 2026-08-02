@@ -13,7 +13,7 @@ void DrawField(int windowX, int windowY)
     int topY = (0.875*windowY);
 
     //Boundaries
-    float LW =0, RW =windowX, GND=(topY-bottomY)/2; //Left wall, ground
+    float LW =0, RW =windowX, GND=(topY+bottomY)/2; //Left wall, ground
 
     //penalty box
     int BLX=(0.02963*windowX), BRX=(0.12667*windowX), //left bottom(top) left(right) x
