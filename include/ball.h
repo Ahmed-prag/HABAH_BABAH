@@ -29,4 +29,8 @@ void UpdateBall(Ball *ball, int windowX, int windowY, float GND);
 
 void DrawBall(Ball *ball);
 
+int CheckGoal(Ball *ball, int windowX, float GND);
+
+void ResetBall(Ball *ball, int windowX, int windowY);
+
 #endif
