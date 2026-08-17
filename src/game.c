@@ -66,6 +66,31 @@ void UpdateGame(int windowX, int windowY)
     if(ball.pos.x<player2.pos.x) player2.dir=false;
     else player2.dir=true;
 
+// --- DÉTECTION DU BUT ---
+    
+    static int goalScored=0;
+    if(!goalScored)
+        goalScored = CheckGoal(&ball, windowX, GND);
+
+    if (goalScored != 0)
+    {
+        static double startTime = 0.0;
+        
+        // Save the start time when the goal is first detected
+        if (startTime == 0.0) 
+        {
+            startTime = GetTime();
+        }
+
+        // Check if 1 second has passed
+        if (GetTime() - startTime >= 1.0)
+        {
+            ResetBall(&ball, windowX, windowY);
+            startTime = 0.0; // Reset timer for the next goal
+            goalScored=0;
+        }
+    }
+
 }
 
 void DrawGame(int windowX, int windowY)
