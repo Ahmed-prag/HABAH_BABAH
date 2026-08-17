@@ -70,4 +70,14 @@ void DrawField(int windowX, int windowY)
         DrawEllipseLines(windowX / 2, (topY+bottomY)/2, (0.05185*windowX) - i, (0.015*windowY)-i, WHITE);
     }
 
+    // cage droite
+    DrawLineEx((Vector2){windowX-BLX, BY}, (Vector2){windowX-BLX, BY-205}, 10.0f, WHITE);
+    DrawLineEx((Vector2){windowX-BLX, BY-200}, (Vector2){windowX-TLX, TY-197}, 10.0f, WHITE);
+    DrawLineEx((Vector2){windowX-TLX, TY-200}, (Vector2){windowX-TLX, TY}, 10.0f, WHITE);
+
+    // cage gauche
+    DrawLineEx((Vector2){BLX, BY}, (Vector2){BLX, BY-205}, 10.0f, WHITE);
+    DrawLineEx((Vector2){BLX, BY-200}, (Vector2){TLX, TY-197}, 10.0f, WHITE);
+    DrawLineEx((Vector2){TLX, TY-200}, (Vector2){TLX, TY}, 10.0f, WHITE);
+
 }
