@@ -16,6 +16,9 @@ static Player player1, player2;
 
 static Ball ball;
 
+static int scorePlayer1 = 0;
+static int scorePlayer2 = 0;
+
 void InitGame(int windowX, int windowY)
 {
     scale = 0.0002 * windowY;  // Calculated wrt player pic and windowY
@@ -68,10 +71,20 @@ void UpdateGame(int windowX, int windowY)
 
 // --- DÉTECTION DU BUT ---
     
-    static int goalScored=0;
-    if(!goalScored)
+    static int goalScored = 0;
+    if (!goalScored)
+    {
         goalScored = CheckGoal(&ball, windowX, GND);
 
+        if (goalScored == 1)
+        {
+            scorePlayer1++;
+        }
+        else if (goalScored == 2)
+        {
+            scorePlayer2++;
+        }
+    }
     if (goalScored != 0)
     {
         static double startTime = 0.0;
@@ -107,6 +120,19 @@ void DrawGame(int windowX, int windowY)
     //Players
     DrawPlayer(&player1, scale, player1.dir); // for now, true or fasle
     DrawPlayer(&player2, scale, player2.dir);
+
+    // --- FEATURE 005 : Affichage séparé dans le panneau ---
+    int fontSize = 75;
+    
+    // Score Joueur 1 (Rectangle de gauche)
+    const char *p1Text = TextFormat("%d", scorePlayer1);
+    int p1Width = MeasureText(p1Text, fontSize);
+    DrawText(p1Text, (windowX * 0.400f) - (p1Width / 2), 115, fontSize, WHITE);
+
+    // Score Joueur 2 (Rectangle de droite)
+    const char *p2Text = TextFormat("%d", scorePlayer2);
+    int p2Width = MeasureText(p2Text, fontSize);
+    DrawText(p2Text, (windowX * 0.720f) - (p2Width / 2), 115, fontSize, WHITE);
 }
 
 void CloseGame(void)
