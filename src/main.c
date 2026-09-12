@@ -1,27 +1,35 @@
 #include "raylib.h"
+#include "game.h"
+#include <stdbool.h>
+
 
 int main(void)
 {
-    const int screenWidth = 800;
-    const int screenHeight = 450;
+    int windowX = 1350;
+    int windowY = 800;
+    int GND=(0.90625*windowY);  // ground
 
-    InitWindow(screenWidth, screenHeight, "Game");
+
+    InitWindow(windowX, windowY, "HABAH_BABAH");
 
     SetTargetFPS(60);
 
+    InitGame(windowX, windowY); // all initializations
+
     while (!WindowShouldClose())
     {
-        // Update
-
+        UpdateGame(windowX, windowY); // all events
 
         BeginDrawing();
 
-        ClearBackground(RAYWHITE);
+        ClearBackground(BLACK);
 
-        // Draw
+        DrawGame(windowX, windowY); // all drawings
 
         EndDrawing();
     }
+
+    CloseGame(); // all unloadings
 
     CloseWindow();
 
