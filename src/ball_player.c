@@ -4,17 +4,17 @@
 void BallPlayerCollision(Ball *ball, Player *player)
 {
     // 1. Find closest point on player rectangle to ball center
-    float pLeft   = player->pos.x - player->orgX;
-    float pRight  = player->pos.x + player->orgX;
-    float pTop    = player->pos.y - player->orgY;
+    float pLeft = player->pos.x - player->orgX;
+    float pRight = player->pos.x + player->orgX;
+    float pTop = player->pos.y - player->orgY;
     float pBottom = player->pos.y + player->orgY;
 
     float closestX = ball->next.x;
     float closestY = ball->next.y;
 
-    if (closestX < pLeft)   closestX = pLeft;
-    if (closestX > pRight)  closestX = pRight;
-    if (closestY < pTop)    closestY = pTop;
+    if (closestX < pLeft) closestX = pLeft;
+    if (closestX > pRight) closestX = pRight;
+    if (closestY < pTop) closestY = pTop;
     if (closestY > pBottom) closestY = pBottom;
 
     // 2. Vector from closest point to ball
@@ -35,12 +35,12 @@ void BallPlayerCollision(Ball *ball, Player *player)
         float ny = dirY / distance;
 
         // 3. Resolve Overlap
-        float overlap = ball->radius - distance;
+        float overlap = ball->radius - distance;// The depth by which the ball penetrates the player box
         ball->next.x += nx * overlap;
         ball->next.y += ny * overlap;
 
         // =========================================================
-        // PINCH / STUCK FIX
+        // =============PINCH / STUCK FIX===========================
         // =========================================================
         float pinchUpwardForce = -14.0f; 
 

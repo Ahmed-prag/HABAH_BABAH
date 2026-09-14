@@ -37,21 +37,26 @@ void UpdateBall(Ball *ball, int windowX, int windowY, float GND)
     Vector2 rightPostPoint = { rightTLX, crossbarY };
 
     // 1. COLLISION ANGLE POTEAU AVANT (Rebond sur un point)
+    // LEFT POST
     if (CheckCollisionPointCircle(leftPostPoint, ball->next, ball->radius))
     {
-        //ball->next.x = leftTLX + ball->radius;
-        // Rebound X only if moving left towards the post; if dropping down, let roof logic handle Y
-        if (ball->velX < 0) ball->velX = -ball->velX * ball->bounce;
-        ball->velX = -ball->velX * ball->bounce;
-        ball->velY = -ball->velY * ball->bounce;
+        // If ball is BELOW crossbar height: it hit the vertical post, bounce horizontally
+        if (ball->pos.y >= crossbarY)
+            ball->velX = -fabs(ball->velX) * ball->bounce; // Force bounce to the left
+        // If ball is ABOVE crossbar height: it hit the top corner/roof, bounce vertically
+        else
+            ball->velY = -fabs(ball->velY) * ball->bounce; // Force bounce upward
     }
+
+    // RIGHT POST
     else if (CheckCollisionPointCircle(rightPostPoint, ball->next, ball->radius))
     {
-        //ball->next.x = rightTLX - ball->radius;
-        // Rebound X only if moving right towards the post
-        if (ball->velX > 0) ball->velX = -ball->velX * ball->bounce;
-        ball->velX = -ball->velX * ball->bounce;
-        ball->velY = -ball->velY * ball->bounce;
+        // If ball is BELOW crossbar height: hit vertical post, bounce horizontally
+        if (ball->pos.y >= crossbarY)
+            ball->velX = fabs(ball->velX) * ball->bounce; // Force bounce to the right
+        // If ball is ABOVE crossbar height: hit top corner/roof, bounce vertically
+        else
+            ball->velY = -fabs(ball->velY) * ball->bounce; // Force bounce upward
     }
 
     // 2. TOIT SOLIDE EN DEUX SENS (CAGE GAUCHE)
