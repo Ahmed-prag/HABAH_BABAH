@@ -39,13 +39,17 @@ void UpdateBall(Ball *ball, int windowX, int windowY, float GND)
     // 1. COLLISION ANGLE POTEAU AVANT (Rebond sur un point)
     if (CheckCollisionPointCircle(leftPostPoint, ball->next, ball->radius))
     {
-        ball->next.x = leftTLX + ball->radius;
+        //ball->next.x = leftTLX + ball->radius;
+        // Rebound X only if moving left towards the post; if dropping down, let roof logic handle Y
+        if (ball->velX < 0) ball->velX = -ball->velX * ball->bounce;
         ball->velX = -ball->velX * ball->bounce;
         ball->velY = -ball->velY * ball->bounce;
     }
     else if (CheckCollisionPointCircle(rightPostPoint, ball->next, ball->radius))
     {
-        ball->next.x = rightTLX - ball->radius;
+        //ball->next.x = rightTLX - ball->radius;
+        // Rebound X only if moving right towards the post
+        if (ball->velX > 0) ball->velX = -ball->velX * ball->bounce;
         ball->velX = -ball->velX * ball->bounce;
         ball->velY = -ball->velY * ball->bounce;
     }
@@ -161,7 +165,7 @@ int CheckGoal(Ball *ball, int windowX, float GND)
 void ResetBall(Ball *ball, int windowX, int windowY)
 {
     ball->pos.x = windowX / 2.0f;
-    ball->pos.y = windowY / 2.0f;
+    ball->pos.y = windowY / 6.0f;
     ball->velX = 0.0f;
     ball->velY = 0.0f;
 }

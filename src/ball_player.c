@@ -1,184 +1,121 @@
 #include "ball_player.h"
-#include<math.h>
-
+#include <math.h>
 
 void BallPlayerCollision(Ball *ball, Player *player)
 {
-    // Ball movement this frame
-    float ballMoveX = ball->next.x - ball->pos.x;
-    float ballMoveY = ball->next.y - ball->pos.y;
+    // 1. Find closest point on player rectangle to ball center
+    float pLeft   = player->pos.x - player->orgX;
+    float pRight  = player->pos.x + player->orgX;
+    float pTop    = player->pos.y - player->orgY;
+    float pBottom = player->pos.y + player->orgY;
 
-    // Player movement this frame
-    float playerMoveX = player->pos.x - player->old.x;
-    float playerMoveY = player->pos.y - player->old.y;
+    float closestX = ball->next.x;
+    float closestY = ball->next.y;
 
-    // Ball movement relative to player
-    float relX = ballMoveX - playerMoveX;
-    float relY = ballMoveY - playerMoveY;
+    if (closestX < pLeft)   closestX = pLeft;
+    if (closestX > pRight)  closestX = pRight;
+    if (closestY < pTop)    closestY = pTop;
+    if (closestY > pBottom) closestY = pBottom;
 
-    // Ball's starting position relative to player's old position
-    float startX = ball->pos.x - player->old.x;
-    float startY = ball->pos.y - player->old.y;
+    // 2. Vector from closest point to ball
+    float dirX = ball->next.x - closestX;
+    float dirY = ball->next.y - closestY;
+    float distanceSq = dirX * dirX + dirY * dirY;
 
-    // Player rectangle expanded by ball radius
-    float left = -player->orgX - ball->radius;
-    float right = player->orgX + ball->radius;
-    float top = -player->orgY - ball->radius;
-    float bottom = player->orgY + ball->radius;
-
-    float tMin = 0.0f;
-    float tMax = 1.0f;
-
-    // We will remember whether X or Y produced the first collision.
-    bool hitX = false;
-    bool hitY = false;
-
-    // ============= X AXIS ============//
-    if (relX == 0.0f)
+    if (distanceSq < (ball->radius * ball->radius)) // If ball is touching player
     {
-        if (startX < left || startX > right)
-            return;
-    }
-    else
-    {
-        float tx1 = (left - startX) /relX;
-        float tx2 = (right - startX) /relX;
-        if (tx1 > tx2)
-        {
-            float temp = tx1;
-            tx1 = tx2;
-            tx2 = temp;
-        }
-        if (tx1 > tMin)
-        {
-            tMin = tx1;
-            hitX = true;
-            hitY = false;
-        }
-        if (tx2 < tMax)
-            tMax = tx2;
-        if (tMin > tMax)
-            return;
-    }
-
-    // ---------------- Y AXIS ----------------
-    if (relY == 0.0f)
-    {
-        if (startY < top || startY > bottom)
-            return;
-    }
-    else
-    {
-        float ty1 = (top - startY) /relY;
-        float ty2 = (bottom - startY) / relY;
-        if (ty1 > ty2)
-        {
-            float temp = ty1;
-            ty1 = ty2;
-            ty2 = temp;
-        }
-        if (ty1 > tMin)
-        {
-            tMin = ty1;
-            hitX = false;
-            hitY = true;
-        }
-        if (ty2 < tMax)
-            tMax = ty2;
-
-        if (tMin > tMax)
-            return;
-    }
-
-    // No collision during this frame
-    if (tMin < 0.0f || tMin > 1.0f)
-        return;
-
-    // ---------------- COLLISION POINT ----------------
-    float hitT = tMin;
-    float playerHitX = player->old.x + playerMoveX * hitT;
-    float playerHitY = player->old.y + playerMoveY * hitT;
-
-    // ---------------- HORIZONTAL HIT ----------------
-    if (hitX)
-    {
-        // Where vertically on the player did the ball hit?
-        // -1 = top
-        // 0 = center
-        // +1 = bottom
-
-        float hitOffset =
-            (ball->pos.y + ballMoveY * hitT - playerHitY) / player->orgY;
-        // Limit the effect
-        if (hitOffset > 1.0f) hitOffset = 1.0f;
-        if (hitOffset < -1.0f) hitOffset = -1.0f;
-
-        if (relX > 0)
-        {
-            // Ball moving right -> hits player's left side
-            ball->next.x = playerHitX - player->orgX - ball->radius;
-            // Normal horizontal bounce
-            ball->velX = -fabs(ball->velX) * ball->bounce;
-
-            // Player movement
-            ball->velX += playerMoveX;
-        }
-        else
-        {
-            // Ball moving left -> hits player's right side
-            ball->next.x = playerHitX + player->orgX + ball->radius;
-            // Normal horizontal bounce
-            ball->velX = fabs(ball->velX) * ball->bounce;
-            // Player movement
-            ball->velX += playerMoveX;
+        float distance = sqrtf(distanceSq);
+        if (distance == 0.0f) {
+            dirY = -1.0f;
+            distance = 1.0f;
         }
 
-        // Hit higher/lower on player changes vertical direction.
-        // A hit near the top gives upward velocity.
-        // A hit near the bottom gives downward velocity.
+        // Base Normal vector (direction away from player)
+        float nx = dirX / distance;
+        float ny = dirY / distance;
 
-        float angleStrength = 9.0f; // can change this ;ater
-        ball->velY += hitOffset * angleStrength;
-    }
+        // 3. Resolve Overlap
+        float overlap = ball->radius - distance;
+        ball->next.x += nx * overlap;
+        ball->next.y += ny * overlap;
 
-    // ---------------- VERTICAL HIT ----------------
-    else if (hitY)
-    {
-        // Where horizontally on the player did the ball hit?
-        //
-        // -1 = left
-        //  0 = center
-        // +1 = right
+        // =========================================================
+        // PINCH / STUCK FIX
+        // =========================================================
+        float pinchUpwardForce = -14.0f; 
 
-        float hitOffset =
-            (ball->pos.x + ballMoveX * hitT - playerHitX) / player->orgX;
-
-        // Limit the effect
-        if (hitOffset > 1.0f) hitOffset = 1.0f;
-        if (hitOffset < -1.0f) hitOffset = -1.0f;
-
-        if (relY > 0)
+        if (overlap > ball->radius * 0.3f && fabs(nx) > 0.6f)
         {
-            // Ball moving downward -> hits player's TOP
-            ball->next.y = playerHitY - player->orgY - ball->radius;
-            // KEEP THE ORIGINAL UPWARD BOUNCE
-            ball->velY = -fabs(ball->velY) * ball->bounce;
-
-            // Player movement still influences it
-            ball->velY += playerMoveY*0.6f;
-        }
-        else
-        {
-            // Ball moving upward -> hits player's BOTTOM
-            ball->next.y = playerHitY + player->orgY + ball->radius;
-            ball->velY =  fabs(ball->velY) * ball->bounce;
-            ball->velY += playerMoveY;
+            ball->velY = pinchUpwardForce; // Launch cleanly upward
+            ball->velX = 0.0f;              // Zero out horizontal velocity
         }
 
-        // Hit toward the left/right side of the player
-        // gives the ball horizontal velocity.
+        //===========================================================//
+        // ------------4. Player relative velocity-------------------//
+        //===========================================================//
+        float playerVelX = player->pos.x - player->old.x;
+        float playerVelY = player->pos.y - player->old.y;
 
-        float angleStrength = 4.0f;// htis too
-        ball->velX += hitOffset * angleStrength;
+        // Relative velocity between ball and player
+        float relVelX = ball->velX - playerVelX;
+        float relVelY = ball->velY - playerVelY;
+
+        // Calculate velocity along collision normal
+        // How fast the ball and player are closing on each other
+        float normalVel = relVelX * nx + relVelY * ny;
+
+        // Only reflect if moving toward each other
+        if (normalVel < 0.0f)
+        {
+            //=======================================================//
+            // Restitution (bounciness): 0.6 absorbs speed, 1.0 retains full speed
+            //=======================================================//
+            float restitution = ball->bounce; 
+            float impulse = -(1.0f + restitution) * normalVel *1.0;
+            // add this factor for greater bounce off from player
+            // (FORMULA) impulse= -(1+ e). Vnormal, e is ball bounce
+
+            // Apply standard reflection impulse along normal
+            ball->velX += nx * impulse;
+            ball->velY += ny * impulse;
+
+            // =========================================================
+            // DYNAMIC JUMP-HEADER & SPEED LIFT
+            // =========================================================
+
+            // 4.1 JUMP-HEADER BOOST: When jumping UP (playerVelY < 0) into a falling ball
+            if (playerVelY < 0.0f && ny < -0.3f) 
+            {
+                // Transfer upward jump momentum directly into the ball
+                // The faster you jump up, the higher/stronger the header goes
+                float jumpPowerMultiplier = 1.2f; 
+                ball->velY += playerVelY * jumpPowerMultiplier; 
+
+                // Add forward heading arc based on player horizontal motion
+                ball->velX += playerVelX * 0.8f; 
+            }
+
+            // 4.2. INCOMING SPEED LIFT: Convert incoming horizontal speed into height
+            // If ball is traveling fast horizontally, angled headers lift it higher
+            float incomingSpeedX = fabs(relVelX);
+            if (incomingSpeedX > 4.0f) 
+            {
+                float speedToLiftRatio = 0.35f; // 35% of horizontal speed converted to vertical lift
+                ball->velY -= incomingSpeedX * speedToLiftRatio; 
+            }
+
+            // Transfer player momentum (only when player moves INTO the ball)
+            if (playerVelX * nx > 0) ball->velX += playerVelX * 0.8f;
+            if (playerVelY * ny > 0) ball->velY += playerVelY * 0.8f;
+            // Add this 0.8 factor for modified kick power
+        }
+
+        // 5. Speed Cap & Pinch Prevention
+        float maxVelX = 14.0f;
+        float maxVelY = 20.0f; 
+
+        if (ball->velY < -maxVelY) ball->velY = -maxVelY; 
+        if (ball->velX >  maxVelX) ball->velX =  maxVelX;
+        if (ball->velX < -maxVelX) ball->velX = -maxVelX;
     }
 }
