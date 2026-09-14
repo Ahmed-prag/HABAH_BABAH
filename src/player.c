@@ -24,112 +24,115 @@ void InitPlayer(Player *player, float GND, float scale)
     player->jp=-19.0f;
 
 }
-void UpdatePlayer(Player *player, KeyboardKey left,
-                  KeyboardKey right, KeyboardKey jump,
-                  int windowX, float ground, float scale,
-                  Rectangle otherRect)   // <-- new parameter
+void UpdatePlayer(Player *player, KeyboardKey left, KeyboardKey right, KeyboardKey jump,
+                  int windowX, float ground, float scale, Rectangle otherRect)
 {
     player->old = player->pos;
 
     // --- X movement ---
     if(IsKeyDown(left)) {
-        if(player->velX>0.0f)
-            player->velX -= 0.5f; // if opposite, break
+        if (player->velX > 0.0f)
+            player->velX -= 0.5f; //If moving opposite way, break
         else
             player->velX -= 0.1f; // accelerate
-        if(player->velX < -6)
-            player->velX = -6; //max
+        if (player->velX < -6.0f)
+        player->velX = -6.0f;
     }
-    else if(IsKeyDown(right)) {
-        if(player->velX<0.0f)
+    else if (IsKeyDown(right)) {
+        if (player->velX < 0.0f)
             player->velX += 0.5f; //Brake hard
-        //testPos.x += player->velX;
         else
             player->velX += 0.1f; // accelerate
-        if(player->velX > 6)
-            player->velX = 6;  //Maximum
+        if(player->velX > 6.0f)
+            player->velX = 6.0f; // MAX
     }
     else {
         player->velX *= 0.8f;
     }
 
-    // Velocity never reaches zero.
-    if (fabs(player->velX) < 0.05f)
-        player->velX = 0.0f;
+    // Velocity never reaches zero...
+    if(fabs(player->velX) < 0.05f) player->velX = 0.0f;
 
-    Vector2 testPos = player->pos;
-    testPos.x += player->velX;
-
-    Rectangle testRect = (Rectangle){
-        testPos.x - player->orgX,
-        testPos.y - player->orgY,
-        2*player->orgX,
-        2*player->orgY
-    };
-
-    if (!CheckCollisionRecs(testRect, otherRect)) {
-        player->pos.x = testPos.x; // accept X move only if no collision
-    }
-
-    // --- Y movement (jump/gravity) ---
     if(IsKeyPressed(jump) && !player->jump) {
         player->velY = player->jp;
         player->jump = true;
     }
 
+    // Apply movement
+    player->pos.x += player->velX;
+    player->pos.y += player->velY;
+
+    // Apply gravity
     if(player->jump || player->pos.y < ground - player->orgY) {
-        testPos = player->pos;
-        testPos.y += player->velY;
+        player->velY += player->g;
+    }
 
-        Rectangle testRectY = (Rectangle){
-            testPos.x - player->orgX,
-            testPos.y - player->orgY,
-            2*player->orgX,
-            2*player->orgY
-        };
+    // Ground constraint
+    if (player->pos.y > ground - player->orgY) {
+        player->pos.y = ground - player->orgY;
+        player->velY = 0.0f;
+        player->jump = false;
+    }
 
-        if (!CheckCollisionRecs(testRectY, otherRect)) {
-            player->pos.y = testPos.y; // accept Y move only if no collision
+    // Window boundaries
+    if (player->pos.x < player->orgX) player->pos.x = player->orgX;
+    if (player->pos.x > windowX - player->orgX) player->pos.x = windowX - player->orgX;
+
+    // Update current bounding box
+    player->rect.x = player->pos.x - player->orgX;
+    player->rect.y = player->pos.y - player->orgY;
+    player->rect.width = 2* player->orgX;
+    player->rect.height = 2* player->orgY;
+
+    // --- PLAYER vs PLAYER RESOLUTION (Fixes Sticking) ---
+    if (CheckCollisionRecs(player->rect, otherRect))
+    {
+        // Calculate overlap on each side
+        float overlapLeft = (player->rect.x + player->rect.width) - otherRect.x;
+        float overlapRight = (otherRect.x + otherRect.width) - player->rect.x;
+        float overlapTop = (player->rect.y + player->rect.height) - otherRect.y;
+        float overlapBottom = (otherRect.y + otherRect.height) - player->rect.y;
+
+        // Find smallest overlap magnitude
+        float minOverlapX = (overlapLeft < overlapRight) ? overlapLeft : overlapRight;
+        float minOverlapY = (overlapTop < overlapBottom) ? overlapTop : overlapBottom;
+
+        if (minOverlapX < minOverlapY)
+        {
+            // Horizontal collision resolution
+            if (overlapLeft < overlapRight) { // Simule certain scenario et voir les valeurs
+                // Moving right into other player
+                player->pos.x -= overlapLeft;
+                if (player->velX > 0)
+                    player->velX = 0;
+            } else {
+                // Moving left into other player
+                player->pos.x += overlapRight;
+                if (player->velX < 0)
+                    player->velX = 0;
+            }
         }
         else
         {
-            if(player->velY > 0)
-            {
-                // Moving downward = landed on P2
-                player->pos.y = otherRect.y - player->orgY;
-                player->jump = false;
+            // Vertical collision resolution
+            if (overlapTop < overlapBottom) {
+                // Landing on top of other player
+                player->pos.y -= overlapTop;
+                if (player->velY > 0) {
+                    player->velY = 0;
+                    player->jump = false;
+                }
+            } else{
+                // Hitting head on bottom of other player
+                player->pos.y += overlapBottom;
+                if (player->velY < 0) player->velY = 0;
             }
-            else if(player->velY < 0)
-            {
-                // Moving upward = hit the bottom of P2
-                player->pos.y = otherRect.y + otherRect.height + player->orgY;
-            }
-
-            player->velY = 0;
         }
-        /*else {
-            player->velY=0;
-            player->jump=false;
-        }*/
 
-        player->velY += player->g;
-
-        if(player->pos.y > ground - player->orgY) {
-            player->pos.y = ground - player->orgY;
-            player->velY = 0;
-            player->jump = false;
-        }
+        // Keep rect updated after positional adjustment
+        player->rect.x = player->pos.x - player->orgX;
+        player->rect.y = player->pos.y - player->orgY;
     }
-
-    // Walls
-    if(player->pos.x < player->orgX) player->pos.x = player->orgX;
-    if(player->pos.x > windowX - player->orgX) player->pos.x = windowX - player->orgX;
-
-    // Update rect
-    player->rect.x = player->pos.x - player->orgX;
-    player->rect.y = player->pos.y - player->orgY;
-    player->rect.width  = 2*player->orgX;
-    player->rect.height = 2*player->orgY;
 }
 
 void DrawPlayer(Player *player, float scale, bool dir)
